@@ -348,7 +348,8 @@ To add a new dataset, subclass
 [`Problem`](https://github.com/tensorflow/tensor2tensor/tree/master/tensor2tensor/data_generators/problem.py)
 and register it with `@registry.register_problem`. See
 [`TranslateEndeWmt8k`](https://github.com/tensorflow/tensor2tensor/tree/master/tensor2tensor/data_generators/translate_ende.py)
-for an example.
+for an example. If you include your problem in a new python file, remember to add an unused import for that new python module in [all_problems.py](tensor2tensor/data_generators/all_problems.py).
+
 
 Also see the [data generators
 README](https://github.com/tensorflow/tensor2tensor/tree/master/tensor2tensor/data_generators/README.md).
