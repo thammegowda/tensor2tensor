@@ -1,7 +1,7 @@
 # Running on Cloud TPUs
 
 Tensor2Tensor supports running on Google Cloud Platforms TPUs, chips
-specialized for ML training. See the official tutorial for [running Transfomer
+specialized for ML training. See the official tutorial for [running Transformer
 on Cloud TPUs](https://cloud.google.com/tpu/docs/tutorials/transformer) or
 read on for more T2T models on TPUs.
 
@@ -14,9 +14,14 @@ Transformer:
 
 You can run the Transformer model on a number of problems,
 from translation through language modeling to sentiment analysis.
-See the official tutorial for [running Transfomer
+See the official tutorial for [running Transformer
 on Cloud TPUs](https://cloud.google.com/tpu/docs/tutorials/transformer)
 for some examples and try out your own problems.
+
+You can train an Automatic Speech Recognition (ASR) model with Transformer
+on TPU by using `transformer` as `model` with `transformer_librispeech_tpu` as
+`hparams_set` and `librispeech` as `problem`. See this [tutorial](tutorials/ast_with_transformer.md) for more details on training it and this
+[notebook](https://colab.research.google.com/github/tensorflow/tensor2tensor/blob/master/tensor2tensor/notebooks/asr_transformer.ipynb) to see how the resulting model transcribes your speech to text.
 
 Image Transformer:
 * `imagetransformer` with `imagetransformer_base_tpu` (or
@@ -38,8 +43,6 @@ We run residual networks on MNIST, CIFAR and ImageNet, but they should
 work on any image classification data-set.
 
 ## Tutorial: Transformer En-De translation on TPU
-
-**Note**: You'll need TensorFlow 1.5+.
 
 Configure the `gcloud` CLI:
 ```
@@ -71,7 +74,7 @@ Launch! It's as simple as adding the `--cloud_tpu` flag.
 t2t-trainer \
   --model=transformer \
   --hparams_set=transformer_tpu \
-  --problems=translate_ende_wmt8k \
+  --problem=translate_ende_wmt8k \
   --train_steps=10 \
   --eval_steps=10 \
   --local_eval_frequency=10 \
@@ -109,7 +112,7 @@ For example, to train a shake-shake model on CIFAR you can run this command.
 t2t-trainer \
   --model=shake_shake \
   --hparams_set=shakeshake_tpu \
-  --problems=image_cifar10 \
+  --problem=image_cifar10 \
   --train_steps=180000 \
   --eval_steps=9 \
   --local_eval_frequency=100 \

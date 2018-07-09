@@ -12,25 +12,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""Tests for Tensor2Tensor's all_problems.py."""
-
+"""Tiny run of model_rl_experiment. Smoke test."""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# Dependency imports
-from tensor2tensor.data_generators import all_problems
+from tensor2tensor.rl import model_rl_experiment
 
 import tensorflow as tf
 
-
-class AllProblemsTest(tf.test.TestCase):
-
-  def testImport(self):
-    """Make sure that importing all_problems doesn't break."""
-    self.assertIsNotNone(all_problems)
+FLAGS = tf.flags.FLAGS
 
 
-if __name__ == '__main__':
+class ModelRLExperimentStochasticTest(tf.test.TestCase):
+
+  def test_stochastic(self):
+    FLAGS.output_dir = tf.test.get_temp_dir()
+    FLAGS.loop_hparams_set = "rl_modelrl_tiny_stochastic"
+    FLAGS.loop_hparams = "generative_model_params=next_frame_stochastic_tiny"
+    FLAGS.schedule = "train"  # skip evaluation for world model training
+    model_rl_experiment.main(None)
+
+
+if __name__ == "__main__":
   tf.test.main()

@@ -26,17 +26,17 @@ You can chat with us on
 
 ### Quick Start
 
-[This iPython notebook](https://goo.gl/wkHexj) explains T2T and runs in your
-browser using a free VM from Google, no installation needed.
-Alternatively, here is a one-command version that installs T2T, downloads MNIST,
-trains a model and evaluates it:
+[This iPython notebook](https://colab.research.google.com/github/tensorflow/tensor2tensor/blob/master/tensor2tensor/notebooks/hello_t2t.ipynb)
+explains T2T and runs in your browser using a free VM from Google,
+no installation needed. Alternatively, here is a one-command version that
+installs T2T, downloads MNIST, trains a model and evaluates it:
 
 ```
 pip install tensor2tensor && t2t-trainer \
   --generate_data \
   --data_dir=~/t2t_data \
   --output_dir=~/t2t_train/mnist \
-  --problems=image_mnist \
+  --problem=image_mnist \
   --model=shake_shake \
   --hparams_set=shake_shake_quick \
   --train_steps=1000 \
@@ -78,13 +78,14 @@ to modify the hyperparameters if you run on a different setup.
 ### Image Classification
 
 For image classification, we have a number of standard data-sets:
-* ImageNet (a large data-set): `--problems=image_imagenet`, or one
+
+* ImageNet (a large data-set): `--problem=image_imagenet`, or one
    of the re-scaled versions (`image_imagenet224`, `image_imagenet64`,
    `image_imagenet32`)
-* CIFAR-10: `--problems=image_cifar10` (or
-    `--problems=image_cifar10_plain` to turn off data augmentation)
-* CIFAR-100: `--problems=image_cifar100`
-* MNIST: `--problems=image_mnist`
+* CIFAR-10: `--problem=image_cifar10` (or
+    `--problem=image_cifar10_plain` to turn off data augmentation)
+* CIFAR-100: `--problem=image_cifar100`
+* MNIST: `--problem=image_mnist`
 
 For ImageNet, we suggest to use the ResNet or Xception, i.e.,
 use `--model=resnet --hparams_set=resnet_50` or
@@ -99,11 +100,12 @@ close to 97% accuracy on CIFAR-10.
 ### Language Modeling
 
 For language modeling, we have these data-sets in T2T:
-* PTB (a small data-set): `--problems=languagemodel_ptb10k` for
-    word-level modeling and `--problems=languagemodel_ptb_characters`
+
+* PTB (a small data-set): `--problem=languagemodel_ptb10k` for
+    word-level modeling and `--problem=languagemodel_ptb_characters`
     for character-level modeling.
-* LM1B (a billion-word corpus): `--problems=languagemodel_lm1b32k` for
-    subword-level modeling and `--problems=languagemodel_lm1b_characters`
+* LM1B (a billion-word corpus): `--problem=languagemodel_lm1b32k` for
+    subword-level modeling and `--problem=languagemodel_lm1b_characters`
     for character-level modeling.
 
 We suggest to start with `--model=transformer` on this task and use
@@ -113,7 +115,8 @@ We suggest to start with `--model=transformer` on this task and use
 ### Sentiment Analysis
 
 For the task of recognizing the sentiment of a sentence, use
-* the IMDB data-set: `--problems=sentiment_imdb`
+
+* the IMDB data-set: `--problem=sentiment_imdb`
 
 We suggest to use `--model=transformer_encoder` here and since it is
 a small data-set, try `--hparams_set=transformer_tiny` and train for
@@ -122,15 +125,20 @@ few steps (e.g., `--train_steps=2000`).
 ### Speech Recognition
 
 For speech-to-text, we have these data-sets in T2T:
-* Librispeech (English speech to text): `--problems=librispeech` for
-    the whole set and `--problems=librispeech_clean` for a smaller
+
+* Librispeech (US English): `--problem=librispeech` for
+    the whole set and `--problem=librispeech_clean` for a smaller
     but nicely filtered part.
+
+* Mozilla Common Voice (US English): `--problem=common_voice` for the whole set
+    `--problem=common_voice_clean` for a quality-checked subset.
 
 ### Summarization
 
 For summarizing longer text into shorter one we have these data-sets:
+
 * CNN/DailyMail articles summarized into a few sentences:
-  `--problems=summarize_cnn_dailymail32k`
+  `--problem=summarize_cnn_dailymail32k`
 
 We suggest to use `--model=transformer` and
 `--hparams_set=transformer_prepend` for this task.
@@ -139,14 +147,18 @@ This yields good ROUGE scores.
 ### Translation
 
 There are a number of translation data-sets in T2T:
-* English-German: `--problems=translate_ende_wmt32k`
-* English-French: `--problems=translate_enfr_wmt32k`
-* English-Czech: `--problems=translate_encs_wmt32k`
-* English-Chinese: `--problems=translate_enzh_wmt32k`
+
+* English-German: `--problem=translate_ende_wmt32k`
+* English-French: `--problem=translate_enfr_wmt32k`
+* English-Czech: `--problem=translate_encs_wmt32k`
+* English-Chinese: `--problem=translate_enzh_wmt32k`
+* English-Vietnamese: `--problem=translate_envi_iwslt32k`
 
 You can get translations in the other direction by appending `_rev` to
 the problem name, e.g., for German-English use
-`--problems=translate_ende_wmt32k_rev`.
+`--problem=translate_ende_wmt32k_rev`
+(note that you still need to download the original data with t2t-datagen
+`--problem=translate_ende_wmt32k`).
 
 For all translation problems, we suggest to try the Transformer model:
 `--model=transformer`. At first it is best to try the base setting,
@@ -192,7 +204,7 @@ t2t-datagen \
 # *  If you run out of memory, add --hparams='batch_size=1024'.
 t2t-trainer \
   --data_dir=$DATA_DIR \
-  --problems=$PROBLEM \
+  --problem=$PROBLEM \
   --model=$MODEL \
   --hparams_set=$HPARAMS \
   --output_dir=$TRAIN_DIR
@@ -209,7 +221,7 @@ ALPHA=0.6
 
 t2t-decoder \
   --data_dir=$DATA_DIR \
-  --problems=$PROBLEM \
+  --problem=$PROBLEM \
   --model=$MODEL \
   --hparams_set=$HPARAMS \
   --output_dir=$TRAIN_DIR \
@@ -324,10 +336,10 @@ and hyperparameter set functions can compose other hyperparameter set functions.
 
 The **trainer** binary is the main entrypoint for training, evaluation, and
 inference. Users can easily switch between problems, models, and hyperparameter
-sets by using the `--model`, `--problems`, and `--hparams_set` flags. Specific
+sets by using the `--model`, `--problem`, and `--hparams_set` flags. Specific
 hyperparameters can be overridden with the `--hparams` flag. `--schedule` and
 related flags control local and distributed training/evaluation
-([distributed training documentation](https://github.com/tensorflow/tensor2tensor/tree/master/tensor2tensor/g3doc/distributed_training.md)).
+([distributed training documentation](https://github.com/tensorflow/tensor2tensor/tree/master/docs/distributed_training.md)).
 
 ## Adding your own components
 
@@ -355,6 +367,23 @@ README](https://github.com/tensorflow/tensor2tensor/tree/master/tensor2tensor/da
 
 ## Papers
 
+When referencing Tensor2Tensor, please cite [this
+paper](https://arxiv.org/abs/1803.07416).
+
+```
+@article{tensor2tensor,
+  author    = {Ashish Vaswani and Samy Bengio and Eugene Brevdo and
+    Francois Chollet and Aidan N. Gomez and Stephan Gouws and Llion Jones and
+    \L{}ukasz Kaiser and Nal Kalchbrenner and Niki Parmar and Ryan Sepassi and
+    Noam Shazeer and Jakob Uszkoreit},
+  title     = {Tensor2Tensor for Neural Machine Translation},
+  journal   = {CoRR},
+  volume    = {abs/1803.07416},
+  year      = {2018},
+  url       = {http://arxiv.org/abs/1803.07416},
+}
+```
+
 Tensor2Tensor was used to develop a number of state-of-the-art models
 and deep learning methods. Here we list some papers that were based on T2T
 from the start and benefited from its features and architecture in ways
@@ -369,6 +398,9 @@ T2T](https://research.googleblog.com/2017/06/accelerating-deep-learning-research
 * [Generating Wikipedia by Summarizing Long
    Sequences](https://arxiv.org/abs/1801.10198)
 * [Image Transformer](https://arxiv.org/abs/1802.05751)
-* [Training Tips for the Transformer Model](http://ufallab.ms.mff.cuni.cz/~popel/training-tips-transformer.pdf)
+* [Training Tips for the Transformer Model](https://arxiv.org/abs/1804.00247)
+* [Self-Attention with Relative Position Representations](https://arxiv.org/abs/1803.02155)
+* [Fast Decoding in Sequence Models using Discrete Latent Variables](https://arxiv.org/abs/1803.03382)
+* [Adafactor: Adaptive Learning Rates with Sublinear Memory Cost](https://arxiv.org/abs/1804.04235)
 
 *Note: This is not an official Google product.*

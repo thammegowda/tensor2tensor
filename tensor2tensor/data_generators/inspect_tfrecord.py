@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 r"""Inspect a TFRecord file of tensorflow.Example and show tokenizations.
 
 python data_generators/inspect_tfrecord.py \
@@ -25,13 +24,12 @@ python data_generators/inspect_tfrecord.py \
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
-# Dependency imports
+import six
 
 from tensor2tensor.data_generators import text_encoder
 
 import tensorflow as tf
-import six
+
 
 tf.flags.DEFINE_string("subword_text_encoder_filename", "",
                        "SubwordTextEncoder vocabulary file")

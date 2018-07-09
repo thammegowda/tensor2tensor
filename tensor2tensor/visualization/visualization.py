@@ -12,15 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Shared code for visualizing transformer attentions."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
-# Dependency imports
-
 import numpy as np
 
 # To register the hparams set
@@ -73,7 +69,7 @@ class AttentionVisualizer(object):
 
     Args:
       sess: A tf.Session object.
-      input_string: The input setence to be translated and visulized.
+      input_string: The input sentence to be translated and visualized.
 
     Returns:
       Tuple of (
@@ -114,14 +110,14 @@ class AttentionVisualizer(object):
 
 
 def build_model(hparams_set, model_name, data_dir, problem_name, beam_size=1):
-  """Build the graph required to featch the attention weights.
+  """Build the graph required to fetch the attention weights.
 
   Args:
     hparams_set: HParams set to build the model with.
     model_name: Name of model.
-    data_dir: Path to directory contatining training data.
+    data_dir: Path to directory containing training data.
     problem_name: Name of problem.
-    beam_size: (Optional) Number of beams to use when decoding a traslation.
+    beam_size: (Optional) Number of beams to use when decoding a translation.
         If set to 1 (default) then greedy decoding is used.
 
   Returns:
@@ -147,7 +143,7 @@ def build_model(hparams_set, model_name, data_dir, problem_name, beam_size=1):
 
   # Must be called after building the training graph, so that the dict will
   # have been filled with the attention tensors. BUT before creating the
-  # interence graph otherwise the dict will be filled with tensors from
+  # inference graph otherwise the dict will be filled with tensors from
   # inside a tf.while_loop from decoding and are marked unfetchable.
   att_mats = get_att_mats(translate_model)
 

@@ -7,14 +7,17 @@ you can easily launch Tensor2Tensor on it, including for hyperparameter tuning.
 # Launch
 
 It's the same `t2t-trainer` you know and love with the addition of the
-`--cloud_mlengine` flag, which by default will launch on a 1-GPU machine.
+`--cloud_mlengine` flag, which by default will launch on a 1-GPU machine
+in the default compute region. See the [docs for `gcloud compute`]
+(https://cloud.google.com/compute/docs/gcloud-compute/#set_default_zone_and_region_in_your_local_client)
+to learn how to set the default compute region.
 
 ```
 # Note that both the data dir and output dir have to be on GCS
 DATA_DIR=gs://my-bucket/data
 OUTPUT_DIR=gs://my-bucket/train
 t2t-trainer \
-  --problems=translate_ende_wmt32k \
+  --problem=translate_ende_wmt32k \
   --model=transformer \
   --hparams_set=transformer_base \
   --data_dir=$DATA_DIR \
@@ -28,13 +31,20 @@ machines with 4 or 8 GPUs.
 You can additionally pass the `--cloud_mlengine_master_type` to select another
 kind of machine (see the [docs for
 `masterType`](https://cloud.google.com/ml-engine/reference/rest/v1/projects.jobs#traininginput)
-for your options). If you provide this flag yourself, make sure you pass the
-correct value for `--worker_gpu`.
+for options, including
+[ML Engine machine
+types](https://cloud.google.com/ml-engine/docs/training-overview)
+and their
+[specs](https://cloud.google.com/compute/docs/machine-types)).
+If you provide this flag yourself, make sure you pass the
+correct value for `--worker_gpu` (for non-GPU machines, you should pass
+`--worker_gpu=0`).
 
 **Note**: `t2t-trainer` only currently supports launching with single machines,
 possibly with multiple GPUs. Multi-machine setups are not yet supported out of
 the box with the `--cloud_mlengine` flag, though multi-machine should in
 principle work just fine. Contributions/testers welcome.
+
 
 ## `--t2t_usr_dir`
 
@@ -51,7 +61,7 @@ with `--hparams_range` and the `--autotune_*` flags:
 
 ```
 t2t-trainer \
-  --problems=translate_ende_wmt32k \
+  --problem=translate_ende_wmt32k \
   --model=transformer \
   --hparams_set=transformer_base \
   --data_dir=$DATA_DIR \
