@@ -31,7 +31,7 @@ import tempfile
 import numpy as np
 import six
 from six.moves import range  # pylint: disable=redefined-builtin
-from tensor2tensor.data_generators import tokenizer
+from tensor2tensor.data_generators.tokenizer import WhiteSpaceTokenizer as tokenizer
 
 import tensorflow as tf
 
