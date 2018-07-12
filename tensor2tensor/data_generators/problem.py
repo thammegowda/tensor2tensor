@@ -108,6 +108,12 @@ class SpaceID(object):
   EN_NLI = 33
   # COLA
   COLA = 34
+  # Enligh Question Context pair
+  EN_Q_CONT = 35
+  # English similarity task
+  EN_SIM = 36
+  # 3 class NLI
+  THREE_CL_NLI = 37
 
 
 def default_model_hparams():
@@ -1118,3 +1124,4 @@ def skip_random_fraction(dataset, data_file):
   # replicas reading the same data in lock-step.
   num_skip = random.randint(0, _file_num_records_cached(data_file))
   return dataset.skip(num_skip)
+

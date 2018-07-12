@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Data generators for the Winograd NLI dataset."""
+"""Data generators for the Question-Answering NLI dataset."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -32,14 +32,14 @@ EOS = text_encoder.EOS
 
 
 @registry.register_problem
-class WinogradNLI(text_problems.TextConcat2ClassProblem):
-  """Winograd NLI classification problems."""
+class QuestionNLI(text_problems.TextConcat2ClassProblem):
+  """Question Answering NLI classification problems."""
 
   # Link to data from GLUE: https://gluebenchmark.com/tasks
-  _WNLI_URL = ("https://firebasestorage.googleapis.com/v0/b/"
+  _QNLI_URL = ("https://firebasestorage.googleapis.com/v0/b/"
                "mtl-sentence-representations.appspot.com/o/"
-               "data%2FWNLI.zip?alt=media&token=068ad0a0-ded7-"
-               "4bd7-99a5-5e00222e0faf")
+               "data%2FQNLI.zip?alt=media&token=c24cad61-f2df-"
+               "4f04-9ab6-aa576fa829d0")
 
   @property
   def is_generate_per_split(self):
@@ -49,7 +49,7 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
   def dataset_splits(self):
     return [{
         "split": problem.DatasetSplit.TRAIN,
-        "shards": 1,
+        "shards": 100,
     }, {
         "split": problem.DatasetSplit.EVAL,
         "shards": 1,
@@ -57,11 +57,11 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
 
   @property
   def approx_vocab_size(self):
-    return 2**13  # 8k vocab suffices for this small dataset.
+    return 2**15
 
   @property
   def vocab_filename(self):
-    return "vocab.wnli.%d" % self.approx_vocab_size
+    return "vocab.qnli.%d" % self.approx_vocab_size
 
   @property
   def num_classes(self):
@@ -69,12 +69,12 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
 
   @property
   def concat_token(self):
-    return "<EN-PR-HYP>"
+    return "<EN-Q-CONT>"
 
   @property
   def concat_id(self):
     if self.vocab_type == text_problems.VocabType.CHARACTER:
-      return problem.SpaceID.EN_PR_HYP
+      return problem.SpaceID.EN_Q_CONT
     return 2
 
   def class_labels(self, data_dir):
@@ -83,18 +83,19 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
     return ["not_entailment", "entailment"]
 
   def _maybe_download_corpora(self, tmp_dir):
-    wnli_filename = "WNLI.zip"
-    wnli_finalpath = os.path.join(tmp_dir, "WNLI")
-    if not tf.gfile.Exists(wnli_finalpath):
+    qnli_filename = "QNLI.zip"
+    qnli_finalpath = os.path.join(tmp_dir, "QNLI")
+    if not tf.gfile.Exists(qnli_finalpath):
       zip_filepath = generator_utils.maybe_download(
-          tmp_dir, wnli_filename, self._WNLI_URL)
+          tmp_dir, qnli_filename, self._QNLI_URL)
       zip_ref = zipfile.ZipFile(zip_filepath, "r")
       zip_ref.extractall(tmp_dir)
       zip_ref.close()
 
-    return wnli_finalpath
+    return qnli_finalpath
 
   def example_generator(self, filename):
+    label_list = self.class_labels(data_dir=None)
     for idx, line in enumerate(tf.gfile.Open(filename, "rb")):
       if idx == 0: continue  # skip header
       if six.PY2:
@@ -103,26 +104,27 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
         line = line.strip().decode("utf-8")
       _, s1, s2, l = line.split("\t")
       inputs = [s1, s2]
+      l = label_list.index(l)
       yield {
           "inputs": inputs,
-          "label": int(l)
+          "label": l
       }
 
   def generate_samples(self, data_dir, tmp_dir, dataset_split):
-    wnli_dir = self._maybe_download_corpora(tmp_dir)
+    qnli_dir = self._maybe_download_corpora(tmp_dir)
     if dataset_split == problem.DatasetSplit.TRAIN:
       filesplit = "train.tsv"
     else:
       filesplit = "dev.tsv"
 
-    filename = os.path.join(wnli_dir, filesplit)
+    filename = os.path.join(qnli_dir, filesplit)
     for example in self.example_generator(filename):
       yield example
 
 
 @registry.register_problem
-class WinogradNLICharacters(WinogradNLI):
-  """Winograd NLI classification problems, character level"""
+class QuestionNLICharacters(QuestionNLI):
+  """Question-Answering NLI classification problems, character level"""
 
   @property
   def vocab_type(self):

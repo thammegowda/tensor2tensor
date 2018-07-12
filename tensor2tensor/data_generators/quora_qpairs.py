@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Data generators for the Winograd NLI dataset."""
+"""Data generators for the Quora Question Pairs dataset."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -32,14 +32,14 @@ EOS = text_encoder.EOS
 
 
 @registry.register_problem
-class WinogradNLI(text_problems.TextConcat2ClassProblem):
-  """Winograd NLI classification problems."""
+class QuoraQuestionPairs(text_problems.TextConcat2ClassProblem):
+  """Quora duplicate question pairs binary classification problems."""
 
   # Link to data from GLUE: https://gluebenchmark.com/tasks
-  _WNLI_URL = ("https://firebasestorage.googleapis.com/v0/b/"
-               "mtl-sentence-representations.appspot.com/o/"
-               "data%2FWNLI.zip?alt=media&token=068ad0a0-ded7-"
-               "4bd7-99a5-5e00222e0faf")
+  _QQP_URL = ("https://firebasestorage.googleapis.com/v0/b/"
+              "mtl-sentence-representations.appspot.com/o/"
+              "data%2FQQP.zip?alt=media&token=700c6acf-160d-"
+              "4d89-81d1-de4191d02cb5")
 
   @property
   def is_generate_per_split(self):
@@ -49,7 +49,7 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
   def dataset_splits(self):
     return [{
         "split": problem.DatasetSplit.TRAIN,
-        "shards": 1,
+        "shards": 100,
     }, {
         "split": problem.DatasetSplit.EVAL,
         "shards": 1,
@@ -57,11 +57,11 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
 
   @property
   def approx_vocab_size(self):
-    return 2**13  # 8k vocab suffices for this small dataset.
+    return 2**15
 
   @property
   def vocab_filename(self):
-    return "vocab.wnli.%d" % self.approx_vocab_size
+    return "vocab.qqp.%d" % self.approx_vocab_size
 
   @property
   def num_classes(self):
@@ -69,60 +69,68 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
 
   @property
   def concat_token(self):
-    return "<EN-PR-HYP>"
+    return "<SENT_SEP>"
 
   @property
   def concat_id(self):
     if self.vocab_type == text_problems.VocabType.CHARACTER:
-      return problem.SpaceID.EN_PR_HYP
+      return problem.SpaceID.EN_CHR
     return 2
 
   def class_labels(self, data_dir):
     del data_dir
-    # Note this binary classification is different from usual MNLI.
-    return ["not_entailment", "entailment"]
+    return ["not_duplicate", "duplicate"]
 
   def _maybe_download_corpora(self, tmp_dir):
-    wnli_filename = "WNLI.zip"
-    wnli_finalpath = os.path.join(tmp_dir, "WNLI")
-    if not tf.gfile.Exists(wnli_finalpath):
+    qqp_filename = "QQP.zip"
+    qqp_finalpath = os.path.join(tmp_dir, "QQP")
+    if not tf.gfile.Exists(qqp_finalpath):
       zip_filepath = generator_utils.maybe_download(
-          tmp_dir, wnli_filename, self._WNLI_URL)
+          tmp_dir, qqp_filename, self._QQP_URL)
       zip_ref = zipfile.ZipFile(zip_filepath, "r")
       zip_ref.extractall(tmp_dir)
       zip_ref.close()
 
-    return wnli_finalpath
+    return qqp_finalpath
 
   def example_generator(self, filename):
+    skipped = 0
     for idx, line in enumerate(tf.gfile.Open(filename, "rb")):
       if idx == 0: continue  # skip header
       if six.PY2:
         line = unicode(line.strip(), "utf-8")
       else:
         line = line.strip().decode("utf-8")
-      _, s1, s2, l = line.split("\t")
-      inputs = [s1, s2]
-      yield {
-          "inputs": inputs,
-          "label": int(l)
-      }
+      split_line = line.split("\t")
+      if len(split_line) < 6:
+        skipped += 1
+        tf.logging.info("Skipping %d" % skipped)
+        continue
+      s1, s2, l = split_line[3:]
+      # A neat data augmentation trick from Radford et al. (2018)
+      # https://blog.openai.com/language-unsupervised/
+      inputs = [[s1, s2], [s2, s1]]
+      for inp in inputs:
+        yield {
+            "inputs": inp,
+            "label": int(l)
+        }
 
   def generate_samples(self, data_dir, tmp_dir, dataset_split):
-    wnli_dir = self._maybe_download_corpora(tmp_dir)
+    qqp_dir = self._maybe_download_corpora(tmp_dir)
     if dataset_split == problem.DatasetSplit.TRAIN:
       filesplit = "train.tsv"
     else:
       filesplit = "dev.tsv"
 
-    filename = os.path.join(wnli_dir, filesplit)
+    filename = os.path.join(qqp_dir, filesplit)
     for example in self.example_generator(filename):
       yield example
 
 
 @registry.register_problem
-class WinogradNLICharacters(WinogradNLI):
-  """Winograd NLI classification problems, character level"""
+class QuoraQuestionPairsCharacters(QuoraQuestionPairs):
+  """Quora duplicate question pairs classification problems, character level"""
 
   @property
   def vocab_type(self):
@@ -130,4 +138,4 @@ class WinogradNLICharacters(WinogradNLI):
 
   @property
   def task_id(self):
-    return problem.SpaceID.EN_NLI
+    return problem.SpaceID.EN_SIM

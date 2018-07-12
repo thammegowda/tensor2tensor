@@ -16,14 +16,14 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import numpy as np
 from tensor2tensor.utils import metrics
-
 
 import tensorflow as tf
 
 
-class CommonLayersTest(tf.test.TestCase):
+class MetricsTest(tf.test.TestCase):
 
   def testAccuracyMetric(self):
     predictions = np.random.randint(1, 5, size=(12, 12, 12, 1))
@@ -229,7 +229,7 @@ class CommonLayersTest(tf.test.TestCase):
     expected = (predictions_repeat == targets).astype(float)
     expected = np.sum(expected, axis=(1, 2, 3))
     expected = np.minimum(expected / 3.0, 1.)
-    expected = np.sum(expected * weights[:, 0, 0, 0]) / np.sum(weights)
+    expected = np.sum(expected * weights[:, 0, 0, 0]) / weights.shape[0]
     with self.test_session() as session:
       scores, weights_ = metrics.multilabel_accuracy_match3(
           tf.one_hot(predictions, depth=5, dtype=tf.float32),
@@ -239,7 +239,7 @@ class CommonLayersTest(tf.test.TestCase):
       session.run(tf.global_variables_initializer())
       _ = session.run(a_op)
       actual = session.run(a)
-    self.assertAlmostEqual(actual, expected)
+    self.assertAlmostEqual(actual, expected, places=6)
 
 
 if __name__ == '__main__':

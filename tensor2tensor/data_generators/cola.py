@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Data generators for the Winograd NLI dataset."""
+"""Data generators for the Corpus of Liguistic Acceptability."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -32,14 +32,14 @@ EOS = text_encoder.EOS
 
 
 @registry.register_problem
-class WinogradNLI(text_problems.TextConcat2ClassProblem):
-  """Winograd NLI classification problems."""
+class Cola(text_problems.Text2ClassProblem):
+  """Corpus of Linguistic Acceptability classification problems."""
 
   # Link to data from GLUE: https://gluebenchmark.com/tasks
-  _WNLI_URL = ("https://firebasestorage.googleapis.com/v0/b/"
+  _COLA_URL = ("https://firebasestorage.googleapis.com/v0/b/"
                "mtl-sentence-representations.appspot.com/o/"
-               "data%2FWNLI.zip?alt=media&token=068ad0a0-ded7-"
-               "4bd7-99a5-5e00222e0faf")
+               "data%2FCoLA.zip?alt=media&token=46d5e637-3411-"
+               "4188-bc44-5809b5bfb5f4")
 
   @property
   def is_generate_per_split(self):
@@ -49,7 +49,7 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
   def dataset_splits(self):
     return [{
         "split": problem.DatasetSplit.TRAIN,
-        "shards": 1,
+        "shards": 10,
     }, {
         "split": problem.DatasetSplit.EVAL,
         "shards": 1,
@@ -61,68 +61,56 @@ class WinogradNLI(text_problems.TextConcat2ClassProblem):
 
   @property
   def vocab_filename(self):
-    return "vocab.wnli.%d" % self.approx_vocab_size
+    return "vocab.cola.%d" % self.approx_vocab_size
 
   @property
   def num_classes(self):
     return 2
 
-  @property
-  def concat_token(self):
-    return "<EN-PR-HYP>"
-
-  @property
-  def concat_id(self):
-    if self.vocab_type == text_problems.VocabType.CHARACTER:
-      return problem.SpaceID.EN_PR_HYP
-    return 2
-
   def class_labels(self, data_dir):
     del data_dir
     # Note this binary classification is different from usual MNLI.
-    return ["not_entailment", "entailment"]
+    return ["unacceptable", "acceptable"]
 
   def _maybe_download_corpora(self, tmp_dir):
-    wnli_filename = "WNLI.zip"
-    wnli_finalpath = os.path.join(tmp_dir, "WNLI")
-    if not tf.gfile.Exists(wnli_finalpath):
+    cola_filename = "CoLA.zip"
+    cola_finalpath = os.path.join(tmp_dir, "CoLA")
+    if not tf.gfile.Exists(cola_finalpath):
       zip_filepath = generator_utils.maybe_download(
-          tmp_dir, wnli_filename, self._WNLI_URL)
+          tmp_dir, cola_filename, self._COLA_URL)
       zip_ref = zipfile.ZipFile(zip_filepath, "r")
       zip_ref.extractall(tmp_dir)
       zip_ref.close()
 
-    return wnli_finalpath
+    return cola_finalpath
 
   def example_generator(self, filename):
-    for idx, line in enumerate(tf.gfile.Open(filename, "rb")):
-      if idx == 0: continue  # skip header
+    for line in tf.gfile.Open(filename, "rb"):
       if six.PY2:
         line = unicode(line.strip(), "utf-8")
       else:
         line = line.strip().decode("utf-8")
-      _, s1, s2, l = line.split("\t")
-      inputs = [s1, s2]
+      _, label, _, sent = line.split("\t")
       yield {
-          "inputs": inputs,
-          "label": int(l)
+          "inputs": sent,
+          "label": int(label)
       }
 
   def generate_samples(self, data_dir, tmp_dir, dataset_split):
-    wnli_dir = self._maybe_download_corpora(tmp_dir)
+    cola_dir = self._maybe_download_corpora(tmp_dir)
     if dataset_split == problem.DatasetSplit.TRAIN:
       filesplit = "train.tsv"
     else:
       filesplit = "dev.tsv"
 
-    filename = os.path.join(wnli_dir, filesplit)
+    filename = os.path.join(cola_dir, filesplit)
     for example in self.example_generator(filename):
       yield example
 
 
 @registry.register_problem
-class WinogradNLICharacters(WinogradNLI):
-  """Winograd NLI classification problems, character level"""
+class ColaCharacters(Cola):
+  """Corpus of Linguistic Acceptability problems, character level"""
 
   @property
   def vocab_type(self):
@@ -130,4 +118,4 @@ class WinogradNLICharacters(WinogradNLI):
 
   @property
   def task_id(self):
-    return problem.SpaceID.EN_NLI
+    return problem.SpaceID.EN_COLA
