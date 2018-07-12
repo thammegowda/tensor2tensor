@@ -80,7 +80,6 @@ MODULES = [
 ]
 ALL_MODULES = list(MODULES)
 
-from tensor2tensor.data_generators import translate_srctgt
 
 
 def _py_err_msg(module):
