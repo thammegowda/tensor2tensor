@@ -392,7 +392,11 @@ def decode_from_file(estimator,
   tf.logging.info("Writing decodes into %s" % decode_filename)
   outfile = tf.gfile.Open(decode_filename, "w")
   for index in range(len(sorted_inputs)):
-    outfile.write("%s%s" % (decodes[sorted_keys[index]], decode_hp.delimiter))
+    line = "%s%s" % (decodes[sorted_keys[index]], decode_hp.delimiter)
+    # When the output contains surrogate unicode characters , eg '\ude89'
+    # the underlying file writer crashes, so replacing them
+    line = line.encode('utf-8', errors='replace')
+    outfile.write(line)
 
 
 def _decode_filename(base_filename, problem_name, decode_hp):
