@@ -172,6 +172,15 @@ class Text2TextProblem(problem.Problem):
     """
     return None
 
+  @property
+  def packed_spacing(self):
+    """If this is a packed dataset, how much padding to insert between examples.
+
+    Returns:
+      int
+    """
+    return 0
+
   # END: Subclass interface
 
   @property
@@ -238,6 +247,7 @@ class Text2TextProblem(problem.Problem):
         generator,
         self.has_inputs,
         self.packed_length,
+        spacing=self.packed_spacing,
         chop_long_sequences=not self.has_inputs)
 
   def generate_encoded_samples(self, data_dir, tmp_dir, dataset_split):
@@ -250,13 +260,13 @@ class Text2TextProblem(problem.Problem):
   def max_subtoken_length(self):
     """Maximum subtoken length when generating vocab.
 
-    Override with a finite integer (e.g. 100) to avoid quadratic-time vocab
-    building.
+    SubwordTextEncoder vocabulary building is quadratic-time wrt this variable,
+    setting it to None uses the length of the longest token in the corpus.
 
     Returns:
       an integer or None
     """
-    return None
+    return 200
 
   @property
   def batch_size_means_tokens(self):
@@ -505,18 +515,7 @@ class TextConcat2ClassProblem(Text2ClassProblem):
   For problems where there are multiple input sentences and we wish to concat
   these inputs with a special delimiter. See, for example, NLI tasks.
   """
-
-  @property
-  def concat_token(self):
-    raise NotImplementedError()
-
-  @property
-  def concat_id(self):
-    raise NotImplementedError()
-
-  @property
-  def additional_reserved_tokens(self):
-    return [self.concat_token]
+  CONCAT_TOKEN = "$"
 
   def generate_text_for_vocab(self, data_dir, tmp_dir):
     for i, sample in enumerate(
@@ -535,7 +534,7 @@ class TextConcat2ClassProblem(Text2ClassProblem):
         inputs += encoder.encode(inp)
         inputs.append(text_encoder.EOS_ID)
         if idx < len(sample["inputs"])-1:
-          inputs.append(self.concat_id)
+          inputs.append(encoder.encode(self.CONCAT_TOKEN)[0])
       label = sample["label"]
       yield {"inputs": inputs, "targets": [label]}
 
@@ -690,8 +689,9 @@ class Text2textTmpdirTokens(Text2textTmpdir):
     if not tf.gfile.Exists(vocab_filepath):
       token_encoder = self._generate_vocab(tmp_dir)
       token_encoder.store_to_file(vocab_filepath)
-    super(Text2textTmpdirTokens, self).generate_samples(data_dir, tmp_dir,
-                                                        dataset_split)
+    return super(Text2textTmpdirTokens, self).generate_samples(data_dir,
+                                                               tmp_dir,
+                                                               dataset_split)
 
 
 class ChoppedTextProblem(Text2SelfProblem):
