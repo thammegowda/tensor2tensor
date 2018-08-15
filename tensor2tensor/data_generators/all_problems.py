@@ -82,6 +82,7 @@ MODULES = [
     "tensor2tensor.data_generators.wikitext103",
     "tensor2tensor.data_generators.wsj_parsing",
     "tensor2tensor.data_generators.wnli",
+    "tensor2tensor.data_generators.translate_srctgt"
 ]
 ALL_MODULES = list(MODULES)
 

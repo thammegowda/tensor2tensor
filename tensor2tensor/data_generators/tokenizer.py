@@ -191,3 +191,19 @@ def vocab_token_counts(text_filepattern, max_lines):
     ret[_native_to_unicode(token)] = int(count)
 
   return ret
+
+
+class WhiteSpaceTokenizer:
+  """A simple tokenizer and detokenizer. Uses white spaces as word boundaries.
+  Best to use with sophisticated tokenizers such as Moses Tokenizer
+  https://github.com/moses-smt/mosesdecoder/blob/master/scripts/tokenizer/tokenizer.perl
+  or ISI's ulf-tokenizer https://github.com/isi-nlp/ulf-tokenizer
+  """
+
+  @staticmethod
+  def encode(text):
+    return text.split()
+
+  @staticmethod
+  def decode(tokens):
+    return " ".join(tokens)

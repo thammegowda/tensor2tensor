@@ -31,7 +31,7 @@ import tempfile
 import numpy as np
 import six
 from six.moves import range  # pylint: disable=redefined-builtin
-from tensor2tensor.data_generators import tokenizer
+from tensor2tensor.data_generators.tokenizer import WhiteSpaceTokenizer as tokenizer
 
 import tensorflow as tf
 
@@ -442,7 +442,11 @@ def _unescape_token(escaped_token):
       return u"\u3013"  # Unicode for undefined character.
 
   trimmed = escaped_token[:-1] if escaped_token.endswith("_") else escaped_token
-  return _UNESCAPE_REGEX.sub(match, trimmed)
+  unescaped = _UNESCAPE_REGEX.sub(match, trimmed)
+
+  # Subword output '\', '1', '3' produces '\13' after concat operation
+  # Swap control characters such as \13, \r with \\\\number
+  return ''.join([ch if ord(ch) >= 32 else '\\\\%d' % (ord(ch)) for ch in unescaped])
 
 
 class SubwordTextEncoder(TextEncoder):
