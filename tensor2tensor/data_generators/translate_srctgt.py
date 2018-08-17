@@ -4,6 +4,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import os
 
 
 # Dependency imports
@@ -26,7 +27,6 @@ DEV_SET = [
 class TranslateSrcTgt32k(translate.TranslateProblem):
     """Problem spec for a Translate Task"""
 
-
     @property
     def approx_vocab_size(self):
         return 2 ** 15  # 32768
@@ -38,3 +38,14 @@ class TranslateSrcTgt32k(translate.TranslateProblem):
     def source_data_files(self, dataset_split):
         train = dataset_split == problem.DatasetSplit.TRAIN
         return TRAIN_SET if train else DEV_SET
+
+
+@registry.register_problem
+class TranslateSrcTgt32kDNT(TranslateSrcTgt32k):
+    """Problem spec for a Translate Task with Do-not-Translate tokens"""
+
+    num_dnts = int(os.environ.get("N_DNTS", "150"))
+    dnt_templates = ['DNT_%d' % i for i in range(num_dnts)]
+
+    def additional_reserved_tokens(self):
+        return self.dnt_templates
