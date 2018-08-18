@@ -47,5 +47,6 @@ class TranslateSrcTgt32kDNT(TranslateSrcTgt32k):
     num_dnts = int(os.environ.get("N_DNTS", "150"))
     dnt_templates = ['DNT_%d' % i for i in range(num_dnts)]
 
+    @property
     def additional_reserved_tokens(self):
         return self.dnt_templates
